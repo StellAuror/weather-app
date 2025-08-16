@@ -1,0 +1,469 @@
+table _Measures-Forecast
+	lineageTag: 8d1eff82-f240-4b63-a361-488370c1295d
+
+	measure CurrentDateTime = NOW()
+		formatString: General Date
+		displayFolder: Today
+		lineageTag: 064d16e7-8f89-406e-a45e-d3a652d75ba2
+
+	measure CurrentTemperature =
+			
+			VAR filteredTable = FILTER(Forecast, Forecast[ClosestToNow])
+			RETURN
+			    MAXX(filteredTable, Forecast[Temperature])
+		displayFolder: Today
+		lineageTag: a58307ca-dd56-459d-a573-0e0501a5386d
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure MinimalTemperature =
+			
+			VAR filteredTable = FILTER(Forecast, INT(Forecast[DAte]) = INT([CurrentDateTime]))
+			RETURN
+			    MINX(filteredTable, Forecast[Temperature])
+		formatString: 0
+		displayFolder: Today
+		lineageTag: 164aa26f-955e-486e-ae4f-436dc8913596
+
+	measure CurrentWindSpeed =
+			
+			VAR filteredTable = FILTER(Forecast, Forecast[ClosestToNow])
+			RETURN
+			    MAXX(filteredTable, Forecast[WindSpeed])
+		displayFolder: Today
+		lineageTag: 2f1b15a7-e5c6-4750-a58c-a3ef492d6b8e
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure CurrentWindDirection =
+			
+			VAR filteredTable = FILTER(Forecast, Forecast[ClosestToNow])
+			VAR Direction = MAXX(filteredTable, Forecast[WindDirection])
+			VAR Directions = DATATABLE (
+			    "Degree", INTEGER,
+			    "Text", STRING,
+			    {
+			        {0, "N"},
+			        {45, "NE"},
+			        {90, "E"},
+			        {135, "SE"},
+			        {180, "S"},
+			        {225, "SW"},
+			        {270, "W"},
+			        {315, "NW"},
+			        {360, "N"}
+			    }
+			)
+			VAR ClosestDirection =
+			    TOPN(
+			        1,
+			        ADDCOLUMNS(
+			            Directions,
+			            "Diff", ABS([Degree] - Direction)
+			        ),
+			        [Diff], ASC
+			    )
+			RETURN
+			    SELECTCOLUMNS(ClosestDirection, [Text])
+		displayFolder: Today
+		lineageTag: 6c71ef12-42bf-4f04-8316-e05b9b0aa6ad
+
+	measure CurrentPreci =
+			
+			VAR filteredTable = FILTER(Forecast, Forecast[ClosestToNow])
+			RETURN
+			    MAXX(filteredTable, Forecast[Precipitation])
+		displayFolder: Today
+		lineageTag: 6980b938-161b-402f-9ba9-1061628ca15f
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure CurrentHumidity =
+			
+			VAR filteredTable = FILTER(Forecast, Forecast[ClosestToNow])
+			RETURN
+			    MAXX(filteredTable, Forecast[Humidity])
+		displayFolder: Today
+		lineageTag: 78ea5498-3405-488d-934a-3722f255d8b6
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure CurrentPressure =
+			
+			VAR filteredTable = FILTER(Forecast, Forecast[ClosestToNow])
+			RETURN
+			    MAXX(filteredTable, Forecast[Pressure])
+		displayFolder: Today
+		lineageTag: de67e2d5-dd03-4bfa-86f9-bfe0564da4fa
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure DayP5 = ```
+			[CurrentDateTime] + 5
+			
+			```
+		formatString: General Date
+		displayFolder: ToBeRemoved
+		lineageTag: a1b1549c-1383-4c3d-ba69-b23c51951ee1
+
+	measure DayP4 = ```
+			[CurrentDateTime] + 4
+			    
+			```
+		formatString: General Date
+		displayFolder: ToBeRemoved
+		lineageTag: 159e09ce-f099-4dd4-8f4d-79a9fd8a94ec
+
+	measure DayP3 = ```
+			[CurrentDateTime] + 3
+			
+			    
+			```
+		formatString: General Date
+		displayFolder: ToBeRemoved
+		lineageTag: ce0599a0-eb19-424f-ab8a-0a802fe0a4d9
+
+	measure DayP2 = ```
+			[CurrentDateTime] + 2
+			
+			    
+			```
+		formatString: General Date
+		displayFolder: ToBeRemoved
+		lineageTag: fbbcf677-0f6a-4806-bd7f-69bd5d50d23a
+
+	measure DayP1Temperature =
+			
+			VAR FilteredTable = FILTER(Forecast7Days, WEEKDAY(Forecast7Days[Date]) = WEEKDAY([DayP1]))
+			RETURN
+			    MAXX(FilteredTable, [Temperature])
+		displayFolder: ToBeRemoved
+		lineageTag: 64a6d787-d065-4e3c-8dee-e50ab0e47892
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure DayP5Temperature =
+			
+			VAR FilteredTable = FILTER(Forecast, WEEKDAY(Forecast[Date]) = WEEKDAY([DayP5]))
+			RETURN
+			    MAXX(FilteredTable, [Temperature])
+		displayFolder: ToBeRemoved
+		lineageTag: cbdb8c2c-9e05-4588-80b0-d3214d2496d7
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure DayP2Temperature =
+			
+			VAR FilteredTable = FILTER(Forecast, WEEKDAY(Forecast[Date]) = WEEKDAY([DayP2]))
+			RETURN
+			    MAXX(FilteredTable, [Temperature])
+		displayFolder: ToBeRemoved
+		lineageTag: fa9c1b39-a665-4bfe-8093-85f6fa633d89
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure DayP3Temperature =
+			
+			VAR FilteredTable = FILTER(Forecast, WEEKDAY(Forecast[Date]) = WEEKDAY([DayP3]))
+			RETURN
+			    MAXX(FilteredTable, [Temperature])
+		displayFolder: ToBeRemoved
+		lineageTag: 1e5ec6f2-2357-4312-9c37-c813fb865d0c
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure DayP4Temperature =
+			
+			VAR FilteredTable = FILTER(Forecast, WEEKDAY(Forecast[Date]) = WEEKDAY([DayP4]))
+			RETURN
+			    MAXX(FilteredTable, [Temperature])
+		displayFolder: ToBeRemoved
+		lineageTag: eb9ed8ac-7ee5-42c1-8006-88195e407d2d
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure DayP1WeatherIcon = ```
+			
+			VAR SelectedDate = [DayP1]
+			
+			-- Filtrujemy tylko dane dzienne, zakładamy że dane mają DateTime (np. godziny 6–20)
+			VAR DailyData =
+			    FILTER(
+			        Forecast7Days,
+			        Forecast7Days[Date] = SelectedDate &&
+			        HOUR(Forecast7Days[Date]) >= 6 &&
+			        HOUR(Forecast7Days[Date]) <= 20
+			    )
+			
+			VAR Temperature = CALCULATE(MAX(Forecast7Days[Temperature]), DailyData)
+			VAR Cloudcover = CALCULATE(MAX(Forecast7Days[Cloudcover]), DailyData)
+			VAR WindSpeed = CALCULATE(MAX(Forecast7Days[WindSpeed]), DailyData)
+			
+			-- Dobór ikony na podstawie warunków pogodowych
+			VAR IconName =
+			    SWITCH(
+			        TRUE(),
+			        Temperature < 0, "day-snowy",
+			        Cloudcover < 20 && Temperature > 20, "sunny",
+			        WindSpeed > 35, "day-windy",
+			        Cloudcover >= 20 && Cloudcover < 60, "day-cloudy",
+			        Cloudcover >= 60 && Cloudcover < 90, "day-cloudy",
+			        Cloudcover >= 90 && WindSpeed < 15, "day-cloudy",
+			        WindSpeed >= 20 && Cloudcover >= 70, "day-rainyy",
+			        Cloudcover >= 70 && Temperature >= 5 && Temperature < 25, "day-rainy",
+			        Temperature > 28 && Cloudcover < 30, "sunny",
+			        Temperature >= 20 && WindSpeed > 25, "day-windy",
+			        Temperature >= 25 && WindSpeed > 30, "thunder",
+			        TRUE(), "sunny" -- domyślna ikona
+			    )
+			
+			-- Zwrócenie URL ikony z tabeli WeatherIcons
+			RETURN
+			CALCULATE(
+			    MAX(WeatherIcons[URL]),
+			    WeatherIcons[Icon] = IconName
+			)
+			
+			```
+		displayFolder: ToBeRemoved
+		lineageTag: 6f015ae3-2108-43f2-b308-b1132e0fc52a
+
+	measure DayP2WeatherIcon = ```
+			
+			VAR SelectedDate = [DayP2]
+			
+			-- Filtrujemy tylko dane dzienne, zakładamy że dane mają DateTime (np. godziny 6–20)
+			VAR DailyData =
+			    FILTER(
+			        Forecast,
+			        Forecast[Date] = SelectedDate &&
+			        HOUR(Forecast[Date]) >= 6 &&
+			        HOUR(Forecast[Date]) <= 20
+			    )
+			
+			VAR Temperature = CALCULATE(MAX(Forecast[Temperature]), DailyData)
+			VAR Cloudcover = CALCULATE(MAX(Forecast[Cloudcover]), DailyData)
+			VAR WindSpeed = CALCULATE(MAX(Forecast[WindSpeed]), DailyData)
+			
+			-- Dobór ikony na podstawie warunków pogodowych
+			VAR IconName =
+			    SWITCH(
+			        TRUE(),
+			        Temperature < 0, "day-snowy",
+			        Cloudcover < 20 && Temperature > 20, "sunny",
+			        WindSpeed > 35, "day-windy",
+			        Cloudcover >= 20 && Cloudcover < 60, "day-cloudy",
+			        Cloudcover >= 60 && Cloudcover < 90, "day-cloudy",
+			        Cloudcover >= 90 && WindSpeed < 15, "day-cloudy",
+			        WindSpeed >= 20 && Cloudcover >= 70, "day-rainyy",
+			        Cloudcover >= 70 && Temperature >= 5 && Temperature < 25, "day-rainy",
+			        Temperature > 28 && Cloudcover < 30, "sunny",
+			        Temperature >= 20 && WindSpeed > 25, "day-windy",
+			        Temperature >= 25 && WindSpeed > 30, "thunder",
+			        TRUE(), "sunny" -- domyślna ikona
+			    )
+			
+			-- Zwrócenie URL ikony z tabeli WeatherIcons
+			RETURN
+			CALCULATE(
+			    MAX('Forecast-Icons'[URL]),
+			    'Forecast-Icons'[Icon] = IconName
+			)
+			
+			```
+		displayFolder: ToBeRemoved
+		lineageTag: 356704a7-45d3-49de-9d9c-dfff5fe9616c
+
+	measure DayP3WeatherIcon = ```
+			
+			VAR SelectedDate = [DayP3]
+			
+			-- Filtrujemy tylko dane dzienne, zakładamy że dane mają DateTime (np. godziny 6–20)
+			VAR DailyData =
+			    FILTER(
+			        Forecast,
+			        Forecast[Date] = SelectedDate &&
+			        HOUR(Forecast[Date]) >= 6 &&
+			        HOUR(Forecast[Date]) <= 20
+			    )
+			
+			VAR Temperature = CALCULATE(MAX(Forecast[Temperature]), DailyData)
+			VAR Cloudcover = CALCULATE(MAX(Forecast[Cloudcover]), DailyData)
+			VAR WindSpeed = CALCULATE(MAX(Forecast[WindSpeed]), DailyData)
+			
+			-- Dobór ikony na podstawie warunków pogodowych
+			VAR IconName =
+			    SWITCH(
+			        TRUE(),
+			        Temperature < 0, "day-snowy",
+			        Cloudcover < 20 && Temperature > 20, "sunny",
+			        WindSpeed > 35, "day-windy",
+			        Cloudcover >= 20 && Cloudcover < 60, "day-cloudy",
+			        Cloudcover >= 60 && Cloudcover < 90, "day-cloudy",
+			        Cloudcover >= 90 && WindSpeed < 15, "day-cloudy",
+			        WindSpeed >= 20 && Cloudcover >= 70, "day-rainyy",
+			        Cloudcover >= 70 && Temperature >= 5 && Temperature < 25, "day-rainy",
+			        Temperature > 28 && Cloudcover < 30, "sunny",
+			        Temperature >= 20 && WindSpeed > 25, "day-windy",
+			        Temperature >= 25 && WindSpeed > 30, "thunder",
+			        TRUE(), "sunny" -- domyślna ikona
+			    )
+			
+			-- Zwrócenie URL ikony z tabeli WeatherIcons
+			RETURN
+			CALCULATE(
+			    MAX('Forecast-Icons'[URL]),
+			    'Forecast-Icons'[Icon] = IconName
+			)
+			
+			```
+		displayFolder: ToBeRemoved
+		lineageTag: dda10640-e91c-4daf-973a-cdb48be680d7
+
+	measure DayP4WeatherIcon = ```
+			
+			VAR SelectedDate = [DayP4]
+			
+			-- Filtrujemy tylko dane dzienne, zakładamy że dane mają DateTime (np. godziny 6–20)
+			VAR DailyData =
+			    FILTER(
+			        Forecast,
+			        Forecast[Date] = SelectedDate &&
+			        HOUR(Forecast[Date]) >= 6 &&
+			        HOUR(Forecast[Date]) <= 20
+			    )
+			
+			VAR Temperature = CALCULATE(MAX(Forecast[Temperature]), DailyData)
+			VAR Cloudcover = CALCULATE(MAX(Forecast[Cloudcover]), DailyData)
+			VAR WindSpeed = CALCULATE(MAX(Forecast[WindSpeed]), DailyData)
+			
+			-- Dobór ikony na podstawie warunków pogodowych
+			VAR IconName =
+			    SWITCH(
+			        TRUE(),
+			        Temperature < 0, "day-snowy",
+			        Cloudcover < 20 && Temperature > 20, "sunny",
+			        WindSpeed > 35, "day-windy",
+			        Cloudcover >= 20 && Cloudcover < 60, "day-cloudy",
+			        Cloudcover >= 60 && Cloudcover < 90, "day-cloudy",
+			        Cloudcover >= 90 && WindSpeed < 15, "day-cloudy",
+			        WindSpeed >= 20 && Cloudcover >= 70, "day-rainyy",
+			        Cloudcover >= 70 && Temperature >= 5 && Temperature < 25, "day-rainy",
+			        Temperature > 28 && Cloudcover < 30, "sunny",
+			        Temperature >= 20 && WindSpeed > 25, "day-windy",
+			        Temperature >= 25 && WindSpeed > 30, "thunder",
+			        TRUE(), "sunny" -- domyślna ikona
+			    )
+			
+			-- Zwrócenie URL ikony z tabeli WeatherIcons
+			RETURN
+			CALCULATE(
+			    MAX('Forecast-Icons'[URL]),
+			    'Forecast-Icons'[Icon] = IconName
+			)
+			
+			```
+		displayFolder: ToBeRemoved
+		lineageTag: 33b0de30-3cce-412c-8ff8-28a0bdecae0d
+
+	measure DayP5WeatherIcon = ```
+			
+			VAR SelectedDate = [DayP5]
+			
+			-- Filtrujemy tylko dane dzienne, zakładamy że dane mają DateTime (np. godziny 6–20)
+			VAR DailyData =
+			    FILTER(
+			        Forecast,
+			        Forecast[Date] = SelectedDate &&
+			        HOUR(Forecast[Date]) >= 6 &&
+			        HOUR(Forecast[Date]) <= 20
+			    )
+			
+			VAR Temperature = CALCULATE(MAX(Forecast[Temperature]), DailyData)
+			VAR Cloudcover = CALCULATE(MAX(Forecast[Cloudcover]), DailyData)
+			VAR WindSpeed = CALCULATE(MAX(Forecast[WindSpeed]), DailyData)
+			
+			-- Dobór ikony na podstawie warunków pogodowych
+			VAR IconName =
+			    SWITCH(
+			        TRUE(),
+			        Temperature < 0, "day-snowy",
+			        Cloudcover < 20 && Temperature > 20, "sunny",
+			        WindSpeed > 35, "day-windy",
+			        Cloudcover >= 20 && Cloudcover < 60, "day-cloudy",
+			        Cloudcover >= 60 && Cloudcover < 90, "day-cloudy",
+			        Cloudcover >= 90 && WindSpeed < 15, "day-cloudy",
+			        WindSpeed >= 20 && Cloudcover >= 70, "day-rainyy",
+			        Cloudcover >= 70 && Temperature >= 5 && Temperature < 25, "day-rainy",
+			        Temperature > 28 && Cloudcover < 30, "sunny",
+			        Temperature >= 20 && WindSpeed > 25, "day-windy",
+			        Temperature >= 25 && WindSpeed > 30, "thunder",
+			        TRUE(), "sunny" -- domyślna ikona
+			    )
+			
+			-- Zwrócenie URL ikony z tabeli WeatherIcons
+			RETURN
+			CALCULATE(
+			    MAX('Forecast-Icons'[URL]),
+			    'Forecast-Icons'[Icon] = IconName
+			)
+			
+			```
+		displayFolder: ToBeRemoved
+		lineageTag: 5074f1bf-bfde-4642-9ac4-3b483826a56b
+
+	measure MaximalTemperature =
+			
+			VAR filteredTable = FILTER(Forecast, INT(Forecast[Date]) = INT([CurrentDateTime]))
+			RETURN
+			    MAXX(filteredTable, Forecast[Temperature])
+		displayFolder: Today
+		lineageTag: 5b8efff5-69ab-42f9-9d2d-7064b62b6165
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure HTitle1 =
+			
+			VAR tit1 = "What Do "
+			VAR tit2 = " Years of Hourly Temperature Data in "
+			VAR tit3 = " Reveal"
+			
+			VAR Years =
+			    DISTINCT(
+			        SELECTCOLUMNS(
+			            Historical,
+			            "Year",
+			            YEAR( Historical[datetime] )
+			        )
+			    )
+			VAR YearQty = COUNTROWS( Years )
+			
+			VAR country = SELECTEDVALUE(Historical[country], "Choosen European Countries")
+			VAR countryQty = CALCULATE(COUNTA(Historical[country]), ALLSELECTED(Historical[country]))
+			VAR countrySelected = IF(country = "Choosen European Countries", country & "(" & countryQty & ")", country)
+			RETURN
+			    tit1 & YearQty & tit2 & countrySelected & tit3
+		lineageTag: 4d5a48d3-1033-437c-b005-11024e23c6b5
+
+	column Value
+		isHidden
+		formatString: 0
+		lineageTag: 2115057f-e226-4b20-ac93-dc36d1d63e3b
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Value]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Image = "https://avatars.githubusercontent.com/u/100155329?v=4"
+		lineageTag: b18a47a6-7b7f-4802-9891-832717c88a72
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	partition _Measures-Forecast = calculated
+		mode: import
+		source = {1}
+
+	annotation PBI_Id = 79dfd0a7e37c47d88afff3bcee030244
+

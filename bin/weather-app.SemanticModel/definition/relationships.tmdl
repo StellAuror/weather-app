@@ -1,0 +1,15 @@
+relationship 4c588b87-2a90-4755-a818-b4958cf7f2bd
+	joinOnDateBehavior: datePartOnly
+	fromColumn: Historical.datetime
+	toColumn: LocalDateTable_d8ef7221-2e18-4a62-9a34-7611f0afe473.Date
+
+relationship 42ee9a70-0f0b-4038-bce8-45412da339d9
+	joinOnDateBehavior: datePartOnly
+	fromColumn: Forecast-Overview.Date
+	toColumn: LocalDateTable_b165392b-37c4-49f5-9ef6-330d6c0cdf86.Date
+
+relationship 918e9b8f-2fb6-41cb-81d2-6390224f1eff
+	joinOnDateBehavior: datePartOnly
+	fromColumn: Forecast.Date
+	toColumn: LocalDateTable_19d29797-b23d-4d71-adeb-506fc9e05353.Date
+

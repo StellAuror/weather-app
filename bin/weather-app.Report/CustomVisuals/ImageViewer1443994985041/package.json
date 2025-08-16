@@ -1,0 +1,29 @@
+{
+  "version": "1.0.0.0",
+  "author": {
+    "name": "SWI",
+    "email": "searp.wijbenga@geoai.nl"
+  },
+  "resources": [
+    {
+      "resourceId": "rId0",
+      "sourceType": 5,
+      "file": "resources/ImageViewer1443994985041.pbiviz.json"
+    }
+  ],
+  "visual": {
+    "guid": "ImageViewer1443994985041",
+    "name": "ImageViewer",
+    "displayName": "ImageViewer",
+    "version": "1.0.0.0",
+    "description": "Initial version.",
+    "supportUrl": "https://community.powerbi.com",
+    "gitHubUrl": "https://github.com/GeoAI/powerbi-visuals-imageviewer",
+    "visualClassName": "ImageViewer"
+  },
+  "metadata": {
+    "pbivizjson": {
+      "resourceId": "rId0"
+    }
+  }
+}

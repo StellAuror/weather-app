@@ -1,0 +1,110 @@
+table Forecast-Overview
+	lineageTag: 3782a625-9327-4543-82d0-57cbcfd318de
+
+	column DaysFromNow
+		dataType: int64
+		formatString: 0
+		lineageTag: bce1e520-e469-44c3-8ab3-886890233eb7
+		summarizeBy: sum
+		sourceColumn: DaysFromNow
+
+		annotation SummarizationSetBy = Automatic
+
+	column DailyIcon = ```
+			
+			VAR SelectedDate = INT([CurrentDateTime] + 'Forecast-Overview'[DaysFromNow])
+			
+			-- Filtrujemy tylko dane dzienne, zakładamy że dane mają DateTime (np. godziny 6–20)
+			VAR DailyData =
+			    FILTER(
+			        Forecast,
+			        INT(Forecast[Date]) = SelectedDate
+			    )
+			
+			VAR Temperature = CALCULATE(MAX(Forecast[Temperature]), DailyData)
+			VAR Cloudcover = CALCULATE(MAX(Forecast[Cloudcover]), DailyData)
+			VAR WindSpeed = CALCULATE(MAX(Forecast[WindSpeed]), DailyData)
+			VAR Precipitation = CALCULATE(SUM(Forecast[Precipitation]), DailyData)
+			
+			
+			-- Dobór ikony na podstawie warunków pogodowych
+			VAR IconName =
+			    SWITCH(
+			        TRUE(),
+			        Temperature < 0 && Precipitation > 1, "day-snowy",
+			        Precipitation > 2, "day-rainy",
+			        Precipitation > 20, "thunder",
+			        WindSpeed > 25, "day-windy",
+			        Temperature > 28, "sunny",
+			        Cloudcover < 20, "sunny",
+			        TRUE(), "day-cloudy"
+			    )
+			
+			
+			
+			-- Zwrócenie URL ikony z tabeli WeatherIcons
+			RETURN
+			CALCULATE(
+			    MAX('Forecast-Icons'[URL]),
+			    'Forecast-Icons'[Icon] = IconName 
+			)& "?nocache=" & 'Forecast-Overview'[DaysFromNow]
+			```
+		lineageTag: 932e0eee-5361-4178-b749-cf1620a115a6
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column MaxTemperature =
+			
+			VAR FilteredTable = FILTER(Forecast, Forecast[DaysFromNow] = 'Forecast-Overview'[DaysFromNow]&"d")
+			RETURN
+			    MAXX(FilteredTable, [Temperature])
+		lineageTag: 7f66a74a-1398-4b5b-a04d-15c3c5017e11
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column MinTemperature =
+			
+			VAR FilteredTable = FILTER(Forecast, Forecast[DaysFromNow] = 'Forecast-Overview'[DaysFromNow]&"d")
+			RETURN
+			    MINX(FilteredTable, [Temperature])
+		lineageTag: eec0626a-dd54-4320-9e01-0a74f9251073
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Date = [CurrentDateTime] + 'Forecast-Overview'[DaysFromNow]
+		formatString: Long Date
+		lineageTag: 8697a130-ff9a-454b-8880-6005b33e7420
+		summarizeBy: none
+
+		variation Variation
+			isDefault
+			relationship: 42ee9a70-0f0b-4038-bce8-45412da339d9
+			defaultHierarchy: LocalDateTable_b165392b-37c4-49f5-9ef6-330d6c0cdf86.'Date Hierarchy'
+
+		changedProperty = DataType
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	partition Forecast-Overview = m
+		mode: import
+		source =
+				let
+				    Source = Table.FromRows(Json.Document(Binary.Decompress(Binary.FromText("i45WMlCK1YlWMgSTRmDSGEyagElTpdhYAA==", BinaryEncoding.Base64), Compression.Deflate)), let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [DayFromNow = _t]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"DayFromNow", Int64.Type}}),
+				    #"Renamed Columns" = Table.RenameColumns(#"Changed Type",{{"DayFromNow", "DaysFromNow"}})
+				in
+				    #"Renamed Columns"
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

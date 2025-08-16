@@ -1,0 +1,96 @@
+table Location
+	lineageTag: ce375847-e1b6-41b0-b892-6b4a2d4aab5e
+
+	column Name
+		dataType: string
+		lineageTag: cfc80582-21aa-422d-933d-9f3770414abf
+		summarizeBy: none
+		sourceColumn: Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column StateCode
+		dataType: string
+		lineageTag: 7b8197a4-68b5-40d6-ac26-63fd586e25f6
+		summarizeBy: none
+		sourceColumn: StateCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column StateName
+		dataType: string
+		lineageTag: a2dc182c-5758-47e4-8864-046e8cfc2168
+		summarizeBy: none
+		sourceColumn: StateName
+
+		annotation SummarizationSetBy = Automatic
+
+	column CountryName
+		dataType: string
+		lineageTag: 4318b202-81e7-4004-bd2d-b624360eae7a
+		summarizeBy: none
+		sourceColumn: CountryName
+
+		annotation SummarizationSetBy = Automatic
+
+	column Latitude
+		dataType: double
+		lineageTag: 58906b84-7857-4970-a38e-f289cb4db3ce
+		summarizeBy: sum
+		sourceColumn: Latitude
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Longitude
+		dataType: double
+		lineageTag: be39a53e-4b73-41dd-9773-ba26cddc2a62
+		summarizeBy: sum
+		sourceColumn: Longitude
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	partition Location = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(File.Contents("B:\Coding\weather-app\cities.csv"), [Delimiter=",", Columns=11, Encoding=65001, QuoteStyle=QuoteStyle.None]),
+				    #"Promoted Headers" = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+				    #"Replaced Value" = Table.ReplaceValue(#"Promoted Headers", ".", ",", Replacer.ReplaceText, {"latitude", "longitude"}),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Replaced Value", {{"id", Int64.Type}, {"name", type text}, {"state_id", Int64.Type}, {"state_code", type text}, {"state_name", type text}, {"country_id", Int64.Type}, {"country_code", type text}, {"country_name", type text}, {"latitude", type number}, {"longitude", type number}, {"wikiDataId", type text}}),
+				    #"Renamed Columns" = Table.RenameColumns(#"Changed Type", {
+				        {"id", "Id"},
+				        {"name", "Name"},
+				        {"state_id", "StateId"},
+				        {"state_code", "StateCode"},
+				        {"state_name", "StateName"},
+				        {"country_id", "CountryId"},
+				        {"country_code", "CountryCode"},
+				        {"country_name", "CountryName"},
+				        {"latitude", "Latitude"},
+				        {"longitude", "Longitude"},
+				        {"wikiDataId", "WikiDataId"}
+				    }),
+				    #"Removed Columns" = Table.RemoveColumns(#"Renamed Columns", {"WikiDataId", "CountryCode", "CountryId", "StateId", "Id"}),
+				    #"Filtered Rows" = Table.SelectRows(#"Removed Columns", each ([CountryName] = "Poland")),
+				
+				    // ---- Random sampling (set sample size here) ----
+				    SampleCount = 5,
+				    RowCount = Table.RowCount(#"Filtered Rows"),
+				    RandomList = List.Random(RowCount),
+				
+				    #"Added Index" = Table.AddIndexColumn(#"Filtered Rows", "Index", 0, 1, Int64.Type),
+				    #"Added Random" = Table.AddColumn(#"Added Index", "Random", each RandomList{[Index]}, type number),
+				    #"Sorted Random" = Table.Sort(#"Added Random", {{"Random", Order.Ascending}}),
+				    #"Sampled Rows" = Table.FirstN(#"Sorted Random", SampleCount),
+				    #"Removed Helper" = Table.RemoveColumns(#"Sampled Rows", {"Random", "Index"})
+				in
+				    #"Removed Helper"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

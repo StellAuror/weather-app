@@ -1,0 +1,299 @@
+table Historical
+	excludeFromModelRefresh
+	lineageTag: 968be639-4565-40ca-9348-96982f0b50d2
+
+	measure ColdestYearAvgTemp = ```
+			
+			VAR Years =
+				DISTINCT(
+					SELECTCOLUMNS(
+						'Historical',
+						"Year", YEAR( 'Historical'[datetime] )
+					)
+				)
+				
+			VAR FilteredYears = FILTER(Years, NOT(ISBLANK([Year])))
+			VAR YearlyTable =
+				ADDCOLUMNS(
+					FilteredYears,
+					"AvgTemp",
+					CALCULATE(
+						AVERAGE( 'Historical'[Temperature] ),
+						FILTER(
+							ALL( 'Historical' ),
+							YEAR( 'Historical'[datetime] ) = [Year]
+						)
+					)
+				)
+			VAR Result = FILTER(YearlyTable, [AvgTemp] = MINX(YearlyTable, [AvgTemp]))
+			RETURN MINX(Result, [Year])
+			
+			
+			
+			```
+		formatString: 0
+		displayFolder: _Temperature Summary
+		lineageTag: c78338c3-70cc-4518-887a-7ec3976d52a5
+
+	measure WarmestYearAvgTemp = ```
+			
+			VAR Years =
+				DISTINCT(
+					SELECTCOLUMNS(
+						'Historical',
+						"Year", YEAR( 'Historical'[datetime] )
+					)
+				)
+				
+			VAR FilteredYears = FILTER(Years, NOT(ISBLANK([Year])))
+			VAR YearlyTable =
+				ADDCOLUMNS(
+					FilteredYears,
+					"AvgTemp",
+					CALCULATE(
+						AVERAGE( 'Historical'[Temperature] ),
+						FILTER(
+							ALL( 'Historical' ),
+							YEAR( 'Historical'[datetime] ) = [Year]
+						)
+					)
+				)
+			VAR Result = FILTER(YearlyTable, [AvgTemp] = MAXX(YearlyTable, [AvgTemp]))
+			RETURN MINX(Result, [Year])
+			
+			
+			```
+		formatString: 0
+		displayFolder: _Temperature Summary
+		lineageTag: 08924a22-6afd-40dc-ad16-8874b8f1eb15
+
+	measure DecadalTempChangeRate = ```
+			
+			VAR Years =
+			    DISTINCT(
+			        SELECTCOLUMNS(
+			            'Historical',
+			            "Year", YEAR( 'Historical'[datetime] )
+			        )
+			    )
+			VAR YearlyTable =
+			    ADDCOLUMNS(
+			        Years,
+			        "AvgTemp",
+			        CALCULATE(
+			            AVERAGE( 'Historical'[Temperature] ),
+			            FILTER(
+			                ALL( 'Historical' ),
+			                YEAR( 'Historical'[datetime] ) = [Year]
+			            )
+			        )
+			    )
+			VAR MinYear = MINX( YearlyTable, [Year] )
+			VAR MaxYear = MAXX( YearlyTable, [Year] )
+			VAR TempMin =
+			    CALCULATE(
+			        AVERAGE( 'Historical'[Temperature] ),
+			        FILTER( ALL( 'Historical' ), YEAR( 'Historical'[datetime] ) = MinYear )
+			    )
+			VAR TempMax =
+			    CALCULATE(
+			        AVERAGE( 'Historical'[Temperature] ),
+			        FILTER( ALL( 'Historical' ), YEAR( 'Historical'[datetime] ) = MaxYear )
+			    )
+			VAR YearSpan = MaxYear - MinYear
+			RETURN
+			    IF( YearSpan > 0, ( TempMax - TempMin ) / YearSpan * 10, BLANK() )
+			
+			
+			```
+		displayFolder: _Temperature Summary
+		lineageTag: ba8dd939-6af6-40dc-8751-2ef53116bc02
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure ColdestMonth = ```
+			
+			VAR YearMonths =
+			    DISTINCT(
+			        SELECTCOLUMNS(
+			            'Historical',
+			            "Year",  YEAR( 'Historical'[datetime] ),
+			            "Month", MONTH( 'Historical'[datetime] )
+			        )
+			    )
+			VAR MonthlyTable =
+			    ADDCOLUMNS(
+			        YearMonths,
+			        "AvgTemp",
+			        CALCULATE(
+			            AVERAGE( 'Historical'[Temperature] ),
+			            FILTER(
+			                ALL( 'Historical' ),
+			                YEAR( 'Historical'[datetime] ) = [Year]
+			                && MONTH( 'Historical'[datetime] ) = [Month]
+			            )
+			        )
+			    )
+			VAR MinTemp = MINX( MonthlyTable, [AvgTemp] )
+			VAR Coldest = FILTER( MonthlyTable, [AvgTemp] = MinTemp )
+			VAR ColdYear  = MINX( Coldest, [Year] )
+			VAR ColdMonth = MINX( Coldest, [Month] )
+			RETURN
+			    FORMAT( DATE( ColdYear, ColdMonth, 1 ), "yyyy-MM" )
+			
+			
+			```
+		displayFolder: _Temperature Summary
+		lineageTag: eda120b8-6746-479a-a7cc-aadb275a94c8
+
+	measure WarmestMonth = ```
+			
+			VAR YearMonths =
+			    DISTINCT(
+			        SELECTCOLUMNS(
+			            'Historical',
+			            "Year",  YEAR( 'Historical'[datetime] ),
+			            "Month", MONTH( 'Historical'[datetime] )
+			        )
+			    )
+			VAR MonthlyTable =
+			    ADDCOLUMNS(
+			        YearMonths,
+			        "AvgTemp",
+			        CALCULATE(
+			            AVERAGE( 'Historical'[Temperature] ),
+			            FILTER(
+			                ALL( 'Historical' ),
+			                YEAR( 'Historical'[datetime] ) = [Year]
+			                && MONTH( 'Historical'[datetime] ) = [Month]
+			            )
+			        )
+			    )
+			VAR MaxTemp = MAXX( MonthlyTable, [AvgTemp] )
+			VAR Hottest = FILTER( MonthlyTable, [AvgTemp] = MaxTemp )
+			VAR HotYear  = MAXX( Hottest, [Year] )
+			VAR HotMonth = MAXX( Hottest, [Month] )
+			RETURN
+			    FORMAT( DATE( HotYear, HotMonth, 1 ), "yyyy-MM" )
+			
+			
+			```
+		displayFolder: _Temperature Summary
+		lineageTag: ddba2bc4-2d58-447b-a2b7-7cc7553ccc59
+
+	measure 'Temperature Relative to Means' = ```
+			
+			    VAR TempMean =  CALCULATE(AVERAGE(Historical[Temperature]), ALLEXCEPT(Historical, Historical[datetime]))
+			RETURN
+			    AVERAGEX(Historical, Historical[Temperature] - TempMean)
+			```
+		lineageTag: a3358a4d-e91b-4443-9aef-0a37e83eb43b
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Temperature_Q1 = PERCENTILE.INC(Historical[Temperature], .25)
+		lineageTag: e470eb52-559b-4673-8bfd-04a6771752ad
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure Temperature_Q3 = PERCENTILE.INC(Historical[Temperature], .75)
+		lineageTag: 674e1ee1-2574-4f33-9054-c3b905c16de0
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column datetime
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: f3c32769-75de-4426-85b3-215e4cf2a88a
+		summarizeBy: none
+		sourceColumn: datetime
+
+		variation Variation
+			isDefault
+			relationship: 4c588b87-2a90-4755-a818-b4958cf7f2bd
+			defaultHierarchy: LocalDateTable_d8ef7221-2e18-4a62-9a34-7611f0afe473.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column Temperature
+		dataType: double
+		lineageTag: 24a4c077-eca3-41ba-8bcb-4bd3c53174a4
+		summarizeBy: sum
+		sourceColumn: Temperature
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column country
+		dataType: string
+		lineageTag: b64c0cd4-5bae-4314-b2a3-ba375b4e8762
+		summarizeBy: none
+		sourceColumn: country
+
+		annotation SummarizationSetBy = Automatic
+
+	column city
+		dataType: string
+		lineageTag: 2051b17e-804a-48f1-9715-1fc9d4c2a73f
+		summarizeBy: none
+		sourceColumn: city
+
+		annotation SummarizationSetBy = Automatic
+
+	column temperature_category =
+			switch(
+				true(),
+				Historical[Temperature] < 0, "Freezing",
+				Historical[Temperature] < 10, "Cold",
+				Historical[Temperature] < 20, "Mildd",
+				Historical[Temperature] < 30, "Warm",
+				"Hot"
+			)
+		dataType: string
+		lineageTag: 2e5b7c8a-1a2b-4c3e-9f7e-8d7c6b5a4f3e
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column Hour = HOUR(Historical[datetime])
+		formatString: 0
+		lineageTag: dcfe43f4-a7f1-4a73-abc0-d2d67cb61006
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Historical = m
+		mode: import
+		source =
+				let
+					Source = Csv.Document(
+						File.Contents("B:\Coding\weather-app\weather-eu.csv"),
+						[
+							Columns=4,
+							Encoding=1250,
+							QuoteStyle=QuoteStyle.None,
+							Delimiter=","
+						]
+					),
+					#"Promoted Headers" = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+				    #"Changed Type" = Table.TransformColumnTypes(
+						#"Promoted Headers",
+						{
+							{"datetime", type datetime},
+							{"hourly_temperature_2m", type number},
+							{"city", type text},
+							{"country", type text}
+						},
+						"en-US"
+					),
+					#"Filtered Country" = Table.SelectRows(#"Changed Type", each [country] = "poland"),
+				    #"Capitalized Each Word" = Table.TransformColumns(#"Filtered Country",{{"country", Text.Proper, type text}}),
+				    #"Renamed Columns" = Table.RenameColumns(#"Capitalized Each Word",{{"hourly_temperature_2m", "Temperature"}})
+				in
+					#"Renamed Columns"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Exception
+

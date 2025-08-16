@@ -1,0 +1,24 @@
+EVALUATE
+VAR Years =
+	DISTINCT(
+		SELECTCOLUMNS(
+			'WeatherEU',
+			"Rok", YEAR( 'WeatherEU'[datetime] )
+		)
+	)
+	
+VAR YearsF = FILTER(Years, NOT(ISBLANK([Rok])))
+VAR YearlyTable =
+	ADDCOLUMNS(
+		YearsF,
+		"AvgTemp",
+		CALCULATE(
+			AVERAGE( 'WeatherEU'[hourly_temperature_2m] ),
+			FILTER(
+				ALL( 'WeatherEU' ),
+				YEAR( 'WeatherEU'[datetime] ) = [Rok]
+			)
+		)
+	)
+VAR Result = FILTER(YearlyTable, [AvgTemp] = MINX(YearlyTable, [AvgTemp]))
+RETURN ROW("test", MINX(Result, [Rok]))

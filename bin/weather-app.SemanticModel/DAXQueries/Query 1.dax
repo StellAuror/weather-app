@@ -1,0 +1,188 @@
+DEFINE
+MEASURE 
+    'WeatherEU'[ColdestYearAvgTemp] =
+VAR Years =
+	DISTINCT(
+		SELECTCOLUMNS(
+			'WeatherEU',
+			"Year", YEAR( 'WeatherEU'[datetime] )
+		)
+	)
+	
+VAR FilteredYears = FILTER(Years, NOT(ISBLANK([Year])))
+VAR YearlyTable =
+	ADDCOLUMNS(
+		FilteredYears,
+		"AvgTemp",
+		CALCULATE(
+			AVERAGE( 'WeatherEU'[hourly_temperature_2m] ),
+			FILTER(
+				ALL( 'WeatherEU' ),
+				YEAR( 'WeatherEU'[datetime] ) = [Year]
+			)
+		)
+	)
+VAR Result = FILTER(YearlyTable, [AvgTemp] = MINX(YearlyTable, [AvgTemp]))
+RETURN MINX(Result, [Year])
+
+MEASURE 
+    'WeatherEU'[WarmestYearAvgTemp] =
+VAR Years =
+	DISTINCT(
+		SELECTCOLUMNS(
+			'WeatherEU',
+			"Year", YEAR( 'WeatherEU'[datetime] )
+		)
+	)
+	
+VAR FilteredYears = FILTER(Years, NOT(ISBLANK([Year])))
+VAR YearlyTable =
+	ADDCOLUMNS(
+		FilteredYears,
+		"AvgTemp",
+		CALCULATE(
+			AVERAGE( 'WeatherEU'[hourly_temperature_2m] ),
+			FILTER(
+				ALL( 'WeatherEU' ),
+				YEAR( 'WeatherEU'[datetime] ) = [Year]
+			)
+		)
+	)
+VAR Result = FILTER(YearlyTable, [AvgTemp] = MAXX(YearlyTable, [AvgTemp]))
+RETURN MINX(Result, [Year])
+
+MEASURE 
+    'WeatherEU'[DecadalTempChangeRate] =
+VAR Years =
+    DISTINCT(
+        SELECTCOLUMNS(
+            'WeatherEU',
+            "Year", YEAR( 'WeatherEU'[datetime] )
+        )
+    )
+VAR YearlyTable =
+    ADDCOLUMNS(
+        Years,
+        "AvgTemp",
+        CALCULATE(
+            AVERAGE( 'WeatherEU'[hourly_temperature_2m] ),
+            FILTER(
+                ALL( 'WeatherEU' ),
+                YEAR( 'WeatherEU'[datetime] ) = [Year]
+            )
+        )
+    )
+VAR MinYear = MINX( YearlyTable, [Year] )
+VAR MaxYear = MAXX( YearlyTable, [Year] )
+VAR TempMin =
+    CALCULATE(
+        AVERAGE( 'WeatherEU'[hourly_temperature_2m] ),
+        FILTER( ALL( 'WeatherEU' ), YEAR( 'WeatherEU'[datetime] ) = MinYear )
+    )
+VAR TempMax =
+    CALCULATE(
+        AVERAGE( 'WeatherEU'[hourly_temperature_2m] ),
+        FILTER( ALL( 'WeatherEU' ), YEAR( 'WeatherEU'[datetime] ) = MaxYear )
+    )
+VAR YearSpan = MaxYear - MinYear
+RETURN
+    IF( YearSpan > 0, ( TempMax - TempMin ) / YearSpan * 10, BLANK() )
+
+MEASURE 
+    'WeatherEU'[ColdestMonth] =
+VAR YearMonths =
+    DISTINCT(
+        SELECTCOLUMNS(
+            'WeatherEU',
+            "Year",  YEAR( 'WeatherEU'[datetime] ),
+            "Month", MONTH( 'WeatherEU'[datetime] )
+        )
+    )
+VAR MonthlyTable =
+    ADDCOLUMNS(
+        YearMonths,
+        "AvgTemp",
+        CALCULATE(
+            AVERAGE( 'WeatherEU'[hourly_temperature_2m] ),
+            FILTER(
+                ALL( 'WeatherEU' ),
+                YEAR( 'WeatherEU'[datetime] ) = [Year]
+                && MONTH( 'WeatherEU'[datetime] ) = [Month]
+            )
+        )
+    )
+VAR MinTemp = MINX( MonthlyTable, [AvgTemp] )
+VAR Coldest = FILTER( MonthlyTable, [AvgTemp] = MinTemp )
+VAR ColdYear  = MINX( Coldest, [Year] )
+VAR ColdMonth = MINX( Coldest, [Month] )
+RETURN
+    FORMAT( DATE( ColdYear, ColdMonth, 1 ), "yyyy-MM" )
+
+MEASURE 
+    'WeatherEU'[WarmestMonth] =
+VAR YearMonths =
+    DISTINCT(
+        SELECTCOLUMNS(
+            'WeatherEU',
+            "Year",  YEAR( 'WeatherEU'[datetime] ),
+            "Month", MONTH( 'WeatherEU'[datetime] )
+        )
+    )
+VAR MonthlyTable =
+    ADDCOLUMNS(
+        YearMonths,
+        "AvgTemp",
+        CALCULATE(
+            AVERAGE( 'WeatherEU'[hourly_temperature_2m] ),
+            FILTER(
+                ALL( 'WeatherEU' ),
+                YEAR( 'WeatherEU'[datetime] ) = [Year]
+                && MONTH( 'WeatherEU'[datetime] ) = [Month]
+            )
+        )
+    )
+VAR MaxTemp = MAXX( MonthlyTable, [AvgTemp] )
+VAR Hottest = FILTER( MonthlyTable, [AvgTemp] = MaxTemp )
+VAR HotYear  = MAXX( Hottest, [Year] )
+VAR HotMonth = MAXX( Hottest, [Month] )
+RETURN
+    FORMAT( DATE( HotYear, HotMonth, 1 ), "yyyy-MM" )
+
+MEASURE 
+    'WeatherEU'[WarmestSummer] =
+VAR Years =
+    DISTINCT(
+        SELECTCOLUMNS(
+            FILTER( 'WeatherEU', MONTH( 'WeatherEU'[datetime] ) IN { 6, 7, 8 } ),
+            "Year", YEAR( 'WeatherEU'[datetime] )
+        )
+    )
+VAR SummerTable =
+    ADDCOLUMNS(
+        Years,
+        "AvgTemp",
+        CALCULATE(
+            AVERAGE( 'WeatherEU'[hourly_temperature_2m] ),
+            FILTER(
+                ALL( 'WeatherEU' ),
+                YEAR( 'WeatherEU'[datetime] ) = [Year]
+                    && MONTH( 'WeatherEU'[datetime] ) IN { 6, 7, 8 }
+            )
+        )
+    )
+VAR MaxTemp = MAXX( SummerTable, [AvgTemp] )
+RETURN
+    MAXX(
+        FILTER( SummerTable, [AvgTemp] = MaxTemp ),
+        [Year]
+    )
+
+EVALUATE
+ROW(
+    "Coldest Year",      [ColdestYearAvgTemp],
+    "Warmest Year",      [WarmestYearAvgTemp],
+    "Decadal Change",    [DecadalTempChangeRate],
+    "Coldest Month",     [ColdestMonth],
+    "Warmest Month",     [WarmestMonth],
+    "Warmest Summer",    [WarmestSummer]
+)

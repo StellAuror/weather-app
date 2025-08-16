@@ -1,0 +1,7 @@
+expression pCity = "Warsaw" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
+	lineageTag: 41f82a61-df9c-44ea-8f83-dbcefa237dbf
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Text
+

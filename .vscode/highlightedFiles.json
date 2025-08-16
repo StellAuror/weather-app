@@ -1,0 +1,42 @@
+{
+  "b:\\Coding\\weather-app\\bin\\weather-app.Report": {
+    "color": "blue",
+    "badge": "■"
+  },
+  "b:\\Coding\\weather-app\\bin\\weather-app.Report\\.pbi": {
+    "parent": "b:\\Coding\\weather-app\\bin\\weather-app.Report"
+  },
+  "b:\\Coding\\weather-app\\bin\\weather-app.Report\\.pbi\\localSettings.json": {
+    "parent": "b:\\Coding\\weather-app\\bin\\weather-app.Report"
+  },
+  "b:\\Coding\\weather-app\\bin\\weather-app.Report\\.platform": {
+    "parent": "b:\\Coding\\weather-app\\bin\\weather-app.Report"
+  },
+  "b:\\Coding\\weather-app\\bin\\weather-app.Report\\definition.pbir": {
+    "parent": "b:\\Coding\\weather-app\\bin\\weather-app.Report"
+  },
+  "b:\\Coding\\weather-app\\bin\\weather-app.Report\\report.json": {
+    "parent": "b:\\Coding\\weather-app\\bin\\weather-app.Report"
+  },
+  "b:\\Coding\\weather-app\\bin\\weather-app.Report\\StaticResources": {
+    "parent": "b:\\Coding\\weather-app\\bin\\weather-app.Report"
+  },
+  "b:\\Coding\\weather-app\\bin\\weather-app.Report\\StaticResources\\RegisteredResources": {
+    "parent": "b:\\Coding\\weather-app\\bin\\weather-app.Report"
+  },
+  "b:\\Coding\\weather-app\\bin\\weather-app.Report\\StaticResources\\RegisteredResources\\Custom7685140290140993.json": {
+    "parent": "b:\\Coding\\weather-app\\bin\\weather-app.Report"
+  },
+  "b:\\Coding\\weather-app\\bin\\weather-app.Report\\StaticResources\\RegisteredResources\\Desktop_-_19602786589694092.svg": {
+    "parent": "b:\\Coding\\weather-app\\bin\\weather-app.Report"
+  },
+  "b:\\Coding\\weather-app\\bin\\weather-app.Report\\StaticResources\\SharedResources": {
+    "parent": "b:\\Coding\\weather-app\\bin\\weather-app.Report"
+  },
+  "b:\\Coding\\weather-app\\bin\\weather-app.Report\\StaticResources\\SharedResources\\BaseThemes": {
+    "parent": "b:\\Coding\\weather-app\\bin\\weather-app.Report"
+  },
+  "b:\\Coding\\weather-app\\bin\\weather-app.Report\\StaticResources\\SharedResources\\BaseThemes\\CY24SU10.json": {
+    "parent": "b:\\Coding\\weather-app\\bin\\weather-app.Report"
+  }
+}

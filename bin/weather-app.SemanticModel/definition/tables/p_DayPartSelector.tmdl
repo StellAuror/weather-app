@@ -1,0 +1,26 @@
+table p_DayPartSelector
+	lineageTag: 946bd32b-2ccf-41ba-b91c-2ae67866f16e
+
+	measure 'Daypart Selector Value' = SELECTEDVALUE('p_DayPartSelector'[Daypart Selector])
+		formatString: 0
+		lineageTag: 90071a3a-c02d-44ea-817e-adc5b349a688
+
+	column 'Daypart Selector'
+		formatString: 0
+		lineageTag: 35dcb0ef-4517-4435-95dc-f8538b2a5912
+		summarizeBy: none
+		sourceColumn: [Value]
+
+		extendedProperty ParameterMetadata =
+				{
+				  "version": 0
+				}
+
+		annotation SummarizationSetBy = User
+
+	partition p_DayPartSelector = calculated
+		mode: import
+		source = GENERATESERIES(0, 24, 1)
+
+	annotation PBI_Id = c58c83d93b774e6bafe7225aa297de62
+

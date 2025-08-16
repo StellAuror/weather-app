@@ -1,0 +1,446 @@
+table Forecast
+	lineageTag: 9517a529-bf71-4db1-8df7-07ebe6b038fb
+
+	measure TemperatureQ3 = PERCENTILE.INC(Forecast[Temperature], .75)
+		displayFolder: _Measures
+		lineageTag: 9b65f078-f09e-41b7-8dbd-44ff47c79dd7
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure TemperatureQ1 = PERCENTILE.INC(Forecast[Temperature], .25)
+		displayFolder: _Measures
+		lineageTag: 0c905f5d-d425-49c1-9e0c-27ebbd25b521
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'PrecipitationRunningSum (D)' = ```
+			
+			CALCULATE(
+			    SUM(Forecast[Precipitation]),
+			    FILTER(
+			        ALLSELECTED(Forecast[DaysFromNow]),
+			        Forecast[DaysFromNow] <= MAX(Forecast[DaysFromNow])
+			    )
+			)
+			
+			```
+		displayFolder: _Measures
+		lineageTag: 06d15102-8ccb-4971-90cd-a9d59cb05bb4
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure HimidityComfortUpper = 60
+		formatString: 0
+		displayFolder: _Measures
+		lineageTag: e43f8d2e-4ae9-4156-b10a-29c040081e5c
+
+	measure HimidityComfortBottom = 40
+		formatString: 0
+		displayFolder: _Measures
+		lineageTag: 0d8f8ffd-7935-423d-9aaa-d9483f212fd7
+
+	measure RelativePressure = AVERAGEX(Forecast, Forecast[Pressure] - 1013)
+		displayFolder: _Measures
+		lineageTag: 84ee182f-a776-4f63-a6ce-c3b3f50130b3
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'PrecipitationRunningSum (DT)' = ```
+			
+			CALCULATE(
+			    SUM(Forecast[Precipitation]),
+			    FILTER(
+			        ALLSELECTED(Forecast[Date]),
+			        Forecast[Date] <= MAX(Forecast[Date])
+			    )
+			)
+			
+			```
+		formatString: 0
+		displayFolder: _Measures
+		lineageTag: bc8b0cc4-d406-430b-b256-1e037593ffd4
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	measure Narrative = ```
+			
+			VAR TodayDate = TODAY()
+			
+			-- Define the 6-day forecast window
+			VAR ForecastRange =
+			    FILTER (
+			        Forecast,
+			        Forecast[Date] >= TodayDate &&
+			        Forecast[Date] < TodayDate + 6
+			    )
+			
+			-- Key Metrics
+			VAR AvgTemp = ROUND(AVERAGEX(ForecastRange, Forecast[Temperature]), 0)
+			VAR MinTemp = ROUND(MINX(ForecastRange, Forecast[Temperature]), 0)
+			VAR MaxTemp = ROUND(MAXX(ForecastRange, Forecast[Temperature]), 0)
+			VAR AvgHumidity = ROUND(AVERAGEX(ForecastRange, Forecast[Humidity]), 0)
+			VAR TotalPrecip = ROUND(SUMX(ForecastRange, Forecast[Precipitation]), 0)
+			VAR MaxPrecip = ROUND(MAXX(ForecastRange, Forecast[Precipitation]), 0)
+			VAR AvgWind = ROUND(AVERAGEX(ForecastRange, Forecast[WindSpeed]), 0)
+			VAR MaxWind = ROUND(MAXX(ForecastRange, Forecast[WindSpeed]), 0)
+			VAR AvgClouds = ROUND(AVERAGEX(ForecastRange, Forecast[Cloudcover]), 0)
+			
+			-- Temperature Narrative
+			VAR TempNarrative =
+			    SWITCH(TRUE(),
+			        AvgTemp >= 26, "a stretch of hot and summery days is expected, calling for shade and cold drinks.",
+			        AvgTemp >= 20, "a warm and steady pattern will dominate—ideal for time outdoors.",
+			        AvgTemp >= 14, "a period of cool, comfortable weather is on the way.",
+			        "a chilly and brisk spell is forecasted—layers recommended."
+			    )
+			
+			-- Humidity Narrative
+			VAR HumidityNarrative =
+			    SWITCH(TRUE(),
+			        AvgHumidity > 80, "Humidity will stay high, making the air feel muggy at times.",
+			        AvgHumidity > 60, "Moderate humidity may be noticeable during active hours.",
+			        AvgHumidity >= 40, "Humidity will stay within a comfortable range.",
+			        "Dry air will prevail, giving the days a crisp feel."
+			    )
+			
+			-- Precipitation Narrative
+			VAR PrecipNarrative =
+			    SWITCH(TRUE(),
+			        TotalPrecip > 20, "Several rainy days are likely—an umbrella will come in handy.",
+			        TotalPrecip > 5, "Intermittent showers may occur but won’t heavily impact plans.",
+			        TotalPrecip > 0, "A few light showers could appear, mostly brief and mild.",
+			        "No rain is expected, making for a dry stretch."
+			    )
+			
+			-- Sky Conditions Narrative
+			VAR SkyNarrative =
+			    SWITCH(TRUE(),
+			        AvgClouds > 75, "Clouds will dominate, with little chance of sunshine.",
+			        AvgClouds > 50, "Skies will shift between overcast and occasional brightness.",
+			        AvgClouds > 25, "Partly cloudy skies will offer a mix of light and shadow.",
+			        "Mostly clear skies are expected—plenty of sun ahead."
+			    )
+			
+			-- Wind Conditions Narrative
+			VAR WindNarrative =
+			    SWITCH(TRUE(),
+			        MaxWind >= 40, "Strong gusts may occur—secure loose items outdoors.",
+			        AvgWind >= 20, "Steady winds will be present, keeping the air moving.",
+			        AvgWind >= 10, "Light breezes will add comfort to the days.",
+			        "Winds will be calm, with little movement in the air."
+			    )
+			
+			-- Final Narrative
+			RETURN
+			    UNICHAR(10) &UNICHAR(10) &
+			
+			    "📅 From today through the next five days, " & TempNarrative & 
+			    " Temperatures will range between " & ROUND(MinTemp,1) & "°C and " & ROUND(MaxTemp,1) & "°C, with an average of " & ROUND(AvgTemp,1) & "°C." & UNICHAR(10) & UNICHAR(10) &
+			    "💧 " & HumidityNarrative & UNICHAR(10) & UNICHAR(10) &
+			    "☔ " & PrecipNarrative & " Total expected precipitation is " & ROUND(TotalPrecip,1) & " mm, with daily peaks reaching " & ROUND(MaxPrecip,1) & " mm." & UNICHAR(10) & UNICHAR(10) &
+			    "🌤️ " & SkyNarrative & UNICHAR(10) & UNICHAR(10) &
+			    "🌬️ " & WindNarrative & " Average speed is around " & ROUND(AvgWind,1) & " km/h, with gusts up to " & ROUND(MaxWind,1) & " km/h." 
+			
+			```
+		lineageTag: 224c7aea-67e9-4b3d-aee9-e2056a4ab9af
+
+	measure WindSpeed_SelectedHours =
+			
+			VAR HourOfPoint = HOUR(MAX('Forecast'[Date]))
+			VAR SelectedHours = VALUES('p_DayPartSelector'[Daypart Selector])
+			RETURN
+			    IF(
+			        HourOfPoint IN SelectedHours,
+			        AVERAGE('Forecast'[WindSpeed]), BLANK()
+			    )
+		displayFolder: _Measures
+		lineageTag: 507e3d9d-e5ec-4f23-836d-ff36fc949f28
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column ClosestToNow = ```
+			
+			VAR CurrentDiff = ABS(DATEDIFF(Forecast[Date], [CurrentDateTime], MINUTE))
+			VAR MinDiff =
+			    MINX(
+			        ALL(Forecast),
+			        ABS(DATEDIFF(Forecast[Date], [CurrentDateTime], MINUTE))
+			    )
+			RETURN
+			    IF(CurrentDiff = MinDiff, TRUE, FALSE)
+			
+			```
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 7aa359c7-9f7e-4f1f-8b56-2193002de0f6
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column DaysFromNow = DATEDIFF([CurrentDateTime], Forecast[Date], DAY) & "d"
+		lineageTag: 98980663-2a60-4043-96ae-79f59030b338
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column Hour = HOUR(Forecast[Date])
+		formatString: 0
+		lineageTag: e6be5443-9a57-402e-b8e1-8be580c1e533
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column Date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 5702e40c-cfec-4886-afc4-eaa0a6d0c38c
+		summarizeBy: none
+		sourceColumn: Date
+
+		variation Variation
+			isDefault
+			relationship: 918e9b8f-2fb6-41cb-81d2-6390224f1eff
+			defaultHierarchy: LocalDateTable_19d29797-b23d-4d71-adeb-506fc9e05353.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column Temperature
+		dataType: double
+		lineageTag: 767568bf-6e27-4232-83c1-dbd27c70a499
+		summarizeBy: sum
+		sourceColumn: Temperature
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column ApparentTemperature
+		dataType: double
+		lineageTag: 03c66e0d-cb98-42d1-a75f-a55c9a2abbbf
+		summarizeBy: sum
+		sourceColumn: ApparentTemperature
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column DewPoint
+		dataType: double
+		lineageTag: 27985ab7-c3b9-4dd9-8d9d-206e60d27848
+		summarizeBy: sum
+		sourceColumn: DewPoint
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Humidity
+		dataType: double
+		lineageTag: af8082f4-10ae-4b36-9cb3-11b341e5eb06
+		summarizeBy: sum
+		sourceColumn: Humidity
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Precipitation
+		dataType: double
+		lineageTag: 80d6b965-d05c-4410-bafc-0b8c79ef1173
+		summarizeBy: sum
+		sourceColumn: Precipitation
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Cloudcover
+		dataType: double
+		lineageTag: b6dbc156-4448-4a43-8a0c-380e154e3c34
+		summarizeBy: sum
+		sourceColumn: Cloudcover
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column WindSpeed
+		dataType: double
+		lineageTag: 68262338-255a-4caa-b04e-4d198b9644a5
+		summarizeBy: sum
+		sourceColumn: WindSpeed
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column WindDirection
+		dataType: double
+		lineageTag: 26d9f4da-fb0c-43ba-9d03-fdbe2857fc27
+		summarizeBy: sum
+		sourceColumn: WindDirection
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Pressure
+		dataType: double
+		lineageTag: 5b6f09cf-75e2-41ce-874c-e7ced34f4ab9
+		summarizeBy: sum
+		sourceColumn: Pressure
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column City
+		dataType: string
+		lineageTag: 09d63afc-3194-4ede-9af2-e46a7a133b00
+		summarizeBy: none
+		sourceColumn: City
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Forecast = m
+		mode: import
+		source = ```
+				let
+				    // First, get the cities data (keeping your original logic)
+				    CitiesSource = Csv.Document(File.Contents("B:\Coding\weather-app\cities.csv"), [Delimiter=",", Columns=11, Encoding=65001, QuoteStyle=QuoteStyle.None]),
+				    #"Promoted Headers" = Table.PromoteHeaders(CitiesSource, [PromoteAllScalars=true]),
+				    #"Replaced Value" = Table.ReplaceValue(#"Promoted Headers", ".", ",", Replacer.ReplaceText, {"latitude", "longitude"}),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Replaced Value", {{"id", Int64.Type}, {"name", type text}, {"state_id", Int64.Type}, {"state_code", type text}, {"state_name", type text}, {"country_id", Int64.Type}, {"country_code", type text}, {"country_name", type text}, {"latitude", type number}, {"longitude", type number}, {"wikiDataId", type text}}),
+				    #"Renamed Columns" = Table.RenameColumns(#"Changed Type", {
+				        {"id", "Id"},
+				        {"name", "Name"},
+				        {"state_id", "StateId"},
+				        {"state_code", "StateCode"},
+				        {"state_name", "StateName"},
+				        {"country_id", "CountryId"},
+				        {"country_code", "CountryCode"},
+				        {"country_name", "CountryName"},
+				        {"latitude", "Latitude"},
+				        {"longitude", "Longitude"},
+				        {"wikiDataId", "WikiDataId"}
+				    }),
+				    #"Removed Columns" = Table.RemoveColumns(#"Renamed Columns", {"WikiDataId", "CountryCode", "CountryId", "StateId", "Id"}),
+				    #"Filtered Rows" = Table.SelectRows(#"Removed Columns", each ([CountryName] = "Poland")),
+				    // ---- Random sampling (set sample size here) ----
+				    SampleCount = 5,
+				    RowCount = Table.RowCount(#"Filtered Rows"),
+				    RandomList = List.Random(RowCount),
+				    #"Added Index" = Table.AddIndexColumn(#"Filtered Rows", "Index", 0, 1, Int64.Type),
+				    #"Added Random" = Table.AddColumn(#"Added Index", "Random", each RandomList{[Index]}, type number),
+				    #"Sorted Random" = Table.Sort(#"Added Random", {{"Random", Order.Ascending}}),
+				    #"Sampled Rows" = Table.FirstN(#"Sorted Random", SampleCount),
+				    #"Removed Helper" = Table.RemoveColumns(#"Sampled Rows", {"Random", "Index"}),
+				    
+				    // Convert cities table to list for processing
+				    CityList = Table.ToRows(#"Removed Helper"),
+				    
+				    // Function to get weather data for a single city - with proper decimal formatting
+				    GetWeatherForCity = (cityRow) =>
+				        let
+				            cityName = cityRow{0}, // Name
+				            stateName = cityRow{2}, // StateName  
+				            latitude = cityRow{4}, // Latitude
+				            longitude = cityRow{5}, // Longitude
+				            
+				            // FIXED: Use Text.Replace to ensure dots as decimal separators
+				            lat = Text.Replace(Number.ToText(latitude), ",", "."),
+				            lon = Text.Replace(Number.ToText(longitude), ",", "."),
+				            url = "https://api.open-meteo.com/v1/forecast?latitude=" & lat & "&longitude=" & lon & "&hourly=temperature_2m,apparent_temperature,dew_point_2m,relative_humidity_2m,precipitation,cloudcover,windspeed_10m,winddirection_10m,surface_pressure&timezone=Europe%2FWarsaw",
+				            
+				            result = try
+				                let
+				                    source = Web.Contents(url, [Headers = [#"Accept-Encoding" = "identity", #"User-Agent" = "PowerBI"]]),
+				                    json = Json.Document(source),
+				                    hourly = json[hourly],
+				                    table = Table.FromColumns({
+				                        hourly[time], 
+				                        hourly[temperature_2m], 
+				                        hourly[apparent_temperature], 
+				                        hourly[dew_point_2m], 
+				                        hourly[relative_humidity_2m], 
+				                        hourly[precipitation], 
+				                        hourly[cloudcover], 
+				                        hourly[windspeed_10m], 
+				                        hourly[winddirection_10m], 
+				                        hourly[surface_pressure]
+				                    }, {
+				                        "time", 
+				                        "temperature_2m", 
+				                        "apparent_temperature", 
+				                        "dew_point_2m", 
+				                        "relative_humidity_2m", 
+				                        "precipitation", 
+				                        "cloudcover", 
+				                        "windspeed_10m", 
+				                        "winddirection_10m", 
+				                        "surface_pressure"
+				                    }),
+				                    #"Replaced Value" = Table.ReplaceValue(table,"T"," ",Replacer.ReplaceText,{"time"}),
+				                    #"Changed Type" = Table.TransformColumnTypes(#"Replaced Value", {
+				                        {"time", type datetime}, 
+				                        {"temperature_2m", type number}, 
+				                        {"apparent_temperature", type number}, 
+				                        {"dew_point_2m", type number}, 
+				                        {"relative_humidity_2m", type number}, 
+				                        {"precipitation", type number}, 
+				                        {"cloudcover", type number}, 
+				                        {"windspeed_10m", type number}, 
+				                        {"winddirection_10m", type number}, 
+				                        {"surface_pressure", type number}
+				                    }),
+				                    #"Renamed Columns" = Table.RenameColumns(#"Changed Type", {
+				                        {"time", "Date"}, 
+				                        {"temperature_2m", "Temperature"}, 
+				                        {"apparent_temperature", "ApparentTemperature"}, 
+				                        {"dew_point_2m", "DewPoint"}, 
+				                        {"relative_humidity_2m", "Humidity"}, 
+				                        {"precipitation", "Precipitation"}, 
+				                        {"cloudcover", "Cloudcover"}, 
+				                        {"windspeed_10m", "WindSpeed"}, 
+				                        {"winddirection_10m", "WindDirection"}, 
+				                        {"surface_pressure", "Pressure"}
+				                    }),
+				                    #"Added City Column" = Table.AddColumn(#"Renamed Columns", "City", each cityName, type text)
+				                in
+				                    #"Added City Column"
+				            otherwise
+				                null
+				        in
+				            result,
+				    
+				    // Get weather data for all cities
+				    WeatherTables = List.Transform(CityList, GetWeatherForCity),
+				    
+				    // Remove any null results (failed API calls)
+				    ValidWeatherTables = List.RemoveNulls(WeatherTables),
+				    
+				    // Combine all tables
+				    CombinedWeatherData = if List.Count(ValidWeatherTables) > 0 then
+				        Table.Combine(ValidWeatherTables)
+				    else
+				        // Return empty table if no data was retrieved
+				        Table.FromRows({}, type table [
+				            Date = datetime,
+				            Temperature = number,
+				            ApparentTemperature = number,
+				            DewPoint = number,
+				            Humidity = number,
+				            Precipitation = number,
+				            Cloudcover = number,
+				            WindSpeed = number,
+				            WindDirection = number,
+				            Pressure = number,
+				            City = text
+				        ])
+				in
+				    CombinedWeatherData
+				```
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

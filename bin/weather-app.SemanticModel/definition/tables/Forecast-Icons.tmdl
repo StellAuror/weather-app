@@ -1,0 +1,69 @@
+table Forecast-Icons
+	lineageTag: 8a02e743-b3b5-4cbd-8328-1768bd61e049
+
+	column Icon
+		dataType: string
+		lineageTag: 9f98a31b-2e61-4cba-9324-51f606a0ed73
+		summarizeBy: none
+		sourceColumn: Icon
+
+		annotation SummarizationSetBy = Automatic
+
+	column URL
+		dataType: string
+		lineageTag: b1e6257d-8e71-4c5e-9e84-3928b2c25c50
+		dataCategory: ImageUrl
+		summarizeBy: none
+		sourceColumn: URL
+
+		annotation SummarizationSetBy = Automatic
+
+	column Page
+		dataType: string
+		lineageTag: 5f83cb37-187d-48fb-968d-97876a22852d
+		summarizeBy: none
+		sourceColumn: Page
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Forecast-Icons = m
+		mode: import
+		source =
+				let
+				    // Parametry repozytorium
+				    user = "StellAuror",
+				    repo = "weather-reasources",
+				    branch = "main",
+				    path = "weather-icons\iloveimg-compressed",
+				
+				    // Zbudowanie prawidłowego URL do GitHub API
+				    apiUrl = "https://api.github.com/repos/" & user & "/" & repo & "/contents/" & path & "?ref=" & branch,
+				
+				    // Pobranie danych JSON — to jest lista rekordów
+				    Source = Json.Document(Web.Contents(apiUrl)),
+				
+				    // Konwersja listy rekordów bezpośrednio na tabelę
+				    ConvertedToTable = Table.FromRecords(Source),
+				
+				    // Filtrowanie, by zostały tylko pliki
+				    FilesOnly = Table.SelectRows(ConvertedToTable, each [type] = "file"),
+				
+				    // Wybór istotnych kolumn i zmiana nazw
+				    Result = Table.SelectColumns(
+				        Table.RenameColumns(FilesOnly, {
+				            {"name", "Name"},
+				            {"download_url", "Download URL"},
+				            {"html_url", "GitHub Page"}
+				        }),
+				        {"Name", "Download URL", "GitHub Page"}
+				    ),
+				    #"Split Column by Delimiter" = Table.SplitColumn(Result, "Name", Splitter.SplitTextByDelimiter(".", QuoteStyle.Csv), {"Name.1"}),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Split Column by Delimiter",{{"Name.1", type text}}),
+				    #"Renamed Columns" = Table.RenameColumns(#"Changed Type",{{"Name.1", "Icon"}, {"Download URL", "URL"}, {"GitHub Page", "Page"}})
+				in
+				    #"Renamed Columns"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

@@ -1,0 +1,31 @@
+model Model
+	culture: en-US
+	defaultPowerBIDataSourceVersion: powerBI_V3
+	sourceQueryCulture: pl-PL
+	dataAccessOptions
+		fastCombine
+		legacyRedirects
+		returnErrorValuesAsNull
+
+annotation PBI_QueryOrder = ["Forecast","pCity","Location","Historical","Forecast-Icons","Forecast-Overview"]
+
+annotation __PBI_TimeIntelligenceEnabled = 1
+
+annotation PBIDesktopVersion = 2.146.705.0 (25.08)+b71502aff0a01340c88f384884ef42771068f115
+
+annotation PBI_ProTooling = ["DevMode","TMDL-Extension","TMDLView_Desktop","DaxQueryView_Desktop"]
+
+ref table Forecast
+ref table Location
+ref table Historical
+ref table DateTableTemplate_5a926033-a10b-4734-a8e5-75de8b794a47
+ref table LocalDateTable_d8ef7221-2e18-4a62-9a34-7611f0afe473
+ref table _Measures-Forecast
+ref table Forecast-Icons
+ref table Forecast-Overview
+ref table LocalDateTable_b165392b-37c4-49f5-9ef6-330d6c0cdf86
+ref table p_DayPartSelector
+ref table LocalDateTable_19d29797-b23d-4d71-adeb-506fc9e05353
+
+ref cultureInfo en-US
+

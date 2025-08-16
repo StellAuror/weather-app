@@ -1,0 +1,93 @@
+createOrReplace
+
+	table WeatherEU
+		excludeFromModelRefresh
+		lineageTag: 968be639-4565-40ca-9348-96982f0b50d2
+
+		column datetime
+			dataType: dateTime
+			formatString: General Date
+			lineageTag: f3c32769-75de-4426-85b3-215e4cf2a88a
+			summarizeBy: none
+			sourceColumn: datetime
+
+			variation Variation
+				isDefault
+				relationship: 4c588b87-2a90-4755-a818-b4958cf7f2bd
+				defaultHierarchy: LocalDateTable_d8ef7221-2e18-4a62-9a34-7611f0afe473.'Date Hierarchy'
+
+			annotation SummarizationSetBy = Automatic
+
+		column hourly_temperature_2m
+			dataType: double
+			lineageTag: 24a4c077-eca3-41ba-8bcb-4bd3c53174a4
+			summarizeBy: sum
+			sourceColumn: hourly_temperature_2m
+
+			annotation SummarizationSetBy = Automatic
+
+			annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+		column city
+			dataType: string
+			lineageTag: 2051b17e-804a-48f1-9715-1fc9d4c2a73f
+			summarizeBy: none
+			sourceColumn: city
+
+			annotation SummarizationSetBy = Automatic
+
+		column country
+			dataType: string
+			lineageTag: b64c0cd4-5bae-4314-b2a3-ba375b4e8762
+			summarizeBy: none
+			sourceColumn: country
+
+			annotation SummarizationSetBy = Automatic
+
+		column temperature_category =
+				switch(
+					true(),
+					WeatherEU[hourly_temperature_2m] < 0, "Freezing",
+					WeatherEU[hourly_temperature_2m] < 10, "Cold",
+					WeatherEU[hourly_temperature_2m] < 20, "Mildd",
+					WeatherEU[hourly_temperature_2m] < 30, "Warm",
+					"Hot"
+				)
+			dataType: string
+			lineageTag: 2e5b7c8a-1a2b-4c3e-9f7e-8d7c6b5a4f3e
+			summarizeBy: none
+
+			annotation SummarizationSetBy = Automatic
+
+		partition WeatherEU = m
+			mode: import
+			source =
+					let
+						Source = Csv.Document(
+							File.Contents("B:\Coding\weather-app\weather-eu.csv"),
+							[
+								Columns=4,
+								Encoding=1250,
+								QuoteStyle=QuoteStyle.None,
+								Delimiter=","
+							]
+						),
+						#"Promoted Headers" = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+						#"Changed Type" = Table.TransformColumnTypes(
+							#"Promoted Headers",
+							{
+								{"datetime", type datetime},
+								{"hourly_temperature_2m", type number},
+								{"city", type text},
+								{"country", type text}
+							},
+							"en-US"
+						),
+						#"Filtered Country" = Table.SelectRows(#"Changed Type", each [country] = "poland")
+					in
+						#"Filtered Country"
+
+		annotation PBI_NavigationStepName = Navigation
+
+		annotation PBI_ResultType = Table
+
